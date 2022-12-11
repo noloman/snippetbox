@@ -7,11 +7,13 @@ import (
 	"net/http"
 	"os"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/noloman/snippetbox/internal/models"
 )
 
 type application struct {
-    errorLog log.Logger
-    infoLog log.Logger
+    errorLog *log.Logger
+    infoLog *log.Logger
+		snippets *models.SnippetModel
 }
 
 func main() {
@@ -30,16 +32,18 @@ func main() {
 	defer db.Close()
 
 	app := application{
-			errorLog: *errorLog,
-			infoLog: *infoLog,
+			errorLog: errorLog,
+			infoLog: infoLog,
+			snippets: &models.SnippetModel{DB: db},
 	}
 
-	infoLog.Printf("Starting server on %s", *addr)
 	srv := http.Server{
         Addr: *addr,
         ErrorLog: errorLog,
         Handler: app.routes(),
     }
+
+	infoLog.Printf("Starting server on %s", *addr)
   err = srv.ListenAndServe()
 	errorLog.Fatal(err)
 }
