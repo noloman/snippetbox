@@ -7,10 +7,17 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	// Import the models package that we just created. You need to prefix this with
+	// whatever module path you set up back in chapter 02.01 (Project Setup and Creating
+	// a Module) so that the import statement looks like this:
+	// "{your-module-path}/internal/models". If you can't remember what module path you
+	// used, you can find it at the top of the go.mod file.
+	"github.com/noloman/snippetbox/internal/models"
 )
 
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
@@ -48,10 +55,11 @@ func main() {
 	// before the main() function exits.
 	defer db.Close()
 
-	// Initialize a new instance of our application struct, containing the
-	// dependencies
+	// Initialize a models.SnippetModel instance containing the connection pool
+	// and add it to the application dependencies.
 	app := &application{
-		logger: logger,
+		logger:   logger,
+		snippets: &models.SnippetModel{DB: db},
 	}
 
 	// Use the Info() method to log the starting server message at Info severity
