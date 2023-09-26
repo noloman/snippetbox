@@ -25,7 +25,7 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 	// Write the SQL statement we want to execute. I've split it over two lines
 	// for readability (which is why it's surrounded with backquotes instead
 	// of normal double quotes).
-	stmt := `INSERT INTO snippetbox (title, content, expires) VALUES (?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
+	stmt := `INSERT INTO snippets (title, content, created, expires) VALUES (?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
 
 	// Use the Exec() method on the embedded connection pool to execute the
 	// statement. The first parameter is the SQL statement, followed by the
@@ -43,7 +43,7 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (int, e
 	if err != nil {
 		return 0, err
 	}
-	
+
 	// The ID returned has the type int64, so we convert it to an int type
 	// before returning.
 	return int(id), nil
