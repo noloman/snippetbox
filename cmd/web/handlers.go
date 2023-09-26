@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	// "html/template"
 	"github.com/noloman/snippetbox/internal/models"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -26,25 +26,20 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// files := []string{
-	// 	"./ui/html/base.tmpl.html",
-	// 	"./ui/html/pages/home.tmpl.html",
-	// 	"./ui/html/partials/nav.tmpl.html",
-	// }
-	// Use the template.ParseFiles() function to read the files and store the
-	// templates in a template set. Notice that we use ... to pass the contents
-	// of the files slice as variadic arguments.
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
+	//     "./ui/html/base.tmpl",
+	//     "./ui/html/partials/nav.tmpl",
+	//     "./ui/html/pages/home.tmpl",
 	// }
 
-	// Use the ExecuteTemplate() method to write the content of the "base"
-	// template as the response body.
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	//     app.serverError(w, r, err)
+	//     return
+	// }
+
 	// err = ts.ExecuteTemplate(w, "base", nil)
 	// if err != nil {
-	// 	app.serverError(w, r, err)
-	// 	return
+	//     app.serverError(w, r, err)
 	// }
 }
 
@@ -65,8 +60,31 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 			app.serverError(w, r, err)
 		}
 	}
-	// Write the snippet data as plain-text HTTP response body
-	fmt.Fprintf(w, "%+v", snippet)
+	files := []string{
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/pages/view.tmpl.html",
+	}
+	// Use the template.ParseFiles() function to read the files and store the
+	// templates in a template set. Notice that we use ... to pass the contents
+	// of the files slice as variadic arguments.
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	// Create an instance of a tempalteData struct holding the snippet data
+	data := templateData{
+		Snippet: snippet,
+	}
+
+	// Use the ExecuteTemplate() method to write the content of the "base" template as the response body.
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
