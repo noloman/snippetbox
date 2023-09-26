@@ -3,11 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
+	// "html/template"
+	"github.com/noloman/snippetbox/internal/models"
 	"net/http"
 	"strconv"
-
-	"github.com/noloman/snippetbox/internal/models"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -16,27 +15,37 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-	}
-	// Use the template.ParseFiles() function to read the files and store the
-	// templates in a template set. Notice that we use ... to pass the contents
-	// of the files slice as variadic arguments.
-	ts, err := template.ParseFiles(files...)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
+	for _, snippet := range snippets {
+		fmt.Fprintf(w, "%+v\n", snippet)
+	}
+
+	// files := []string{
+	// 	"./ui/html/base.tmpl.html",
+	// 	"./ui/html/pages/home.tmpl.html",
+	// 	"./ui/html/partials/nav.tmpl.html",
+	// }
+	// Use the template.ParseFiles() function to read the files and store the
+	// templates in a template set. Notice that we use ... to pass the contents
+	// of the files slice as variadic arguments.
+	// ts, err := template.ParseFiles(files...)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
+
 	// Use the ExecuteTemplate() method to write the content of the "base"
 	// template as the response body.
-	err = ts.ExecuteTemplate(w, "base", nil)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	// err = ts.ExecuteTemplate(w, "base", nil)
+	// if err != nil {
+	// 	app.serverError(w, r, err)
+	// 	return
+	// }
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
