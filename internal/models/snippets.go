@@ -60,7 +60,7 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 	// to row.Scan are *pointers* to the place you want to copy the data into,
 	// and the number of arguments must be exactly the same as the number of
 	// columns returned by your statement.
-	err := m.DB.QueryRow(`SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() AND id = ?`).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
+	err := m.DB.QueryRow(`SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() AND id = ?`, id).Scan(&s.ID, &s.Title, &s.Content, &s.Created, &s.Expires)
 
 	if err != nil {
 		// If the query returns no rows, then row.Scan() will return a
