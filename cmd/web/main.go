@@ -4,9 +4,12 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
+
 	// Import the models package that we just created. You need to prefix this with
 	// whatever module path you set up back in chapter 02.01 (Project Setup and Creating
 	// a Module) so that the import statement looks like this:
@@ -16,8 +19,10 @@ import (
 )
 
 type application struct {
-	logger   *slog.Logger
-	snippets *models.SnippetModel
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	snippets      *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -34,6 +39,9 @@ func main() {
 	// otherwise it will always contain the default value of ":4000". If any errors are
 	// encountered during parsing the application will be terminated.
 	flag.Parse()
+
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
 	// Use the slog.New() function to initialize a new structured logger, which
 	// writes to the standard out stream and uses the default settings.
@@ -55,23 +63,24 @@ func main() {
 	// before the main() function exits.
 	defer db.Close()
 
+	// Initialize a new template cache
+	templateCache, err := newTemplateCache()
+
 	// Initialize a models.SnippetModel instance containing the connection pool
 	// and add it to the application dependencies.
 	app := &application{
-		logger:   logger,
-		snippets: &models.SnippetModel{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		snippets:      &models.SnippetModel{DB: db},
+		templateCache: templateCache,
 	}
 
 	// Use the Info() method to log the starting server message at Info severity
 	// (along with the listen address as an attribute).
-	logger.Info("starting server", slog.String("addr", *addr))
+	infoLog.Printf("starting server", *addr)
 
 	err = http.ListenAndServe(*addr, app.routes())
-	// And we also use the Error() method to log any error message returned by
-	// http.ListenAndServe() at Error severity (with no additional attributes),
-	// and then call os.Exit(1) to terminate the application with exit code 1.
-	logger.Error(err.Error())
-	os.Exit(1)
+	errorLog.Fatal(err)
 }
 
 func openDB(dsn string) (*sql.DB, error) {

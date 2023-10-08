@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/noloman/snippetbox/internal/models"
-	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -17,31 +16,17 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	snippets, err := app.snippets.Latest()
 	if err != nil {
-		app.serverError(w, r, err)
+		app.serverError(w, err)
 		return
 	}
 
-	files := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/pages/home.tmpl.html",
-	}
+	// Call the newTemplateData() helper to get a templateData struct containing
+	// the 'default' data (which for now is just the current year), and add the
+	// snippets slice to it.
+	data := app.newTemplateData(r)
+	data.Snippets = snippets
 
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	// Create an instance of a templateData struct holding the snippet data
-	data := &templateData{
-		Snippets: snippets,
-	}
-
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	app.render(w, http.StatusOK, "home.tmpl.html", data)
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -53,39 +38,19 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// Use the SnippetModel's Get() method to retrieve the data for a
 	// specific record based on its ID. If no matching record is found,
 	// return a 404 Not Found response.
-	snippets, err := app.snippets.Latest()
+	snippet, err := app.snippets.Get(id)
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
 		} else {
-			app.serverError(w, r, err)
+			app.serverError(w, err)
 		}
 	}
-	files := []string{
-		"./ui/html/base.tmpl.html",
-		"./ui/html/partials/nav.tmpl.html",
-		"./ui/html/pages/view.tmpl.html",
-	}
-	// Use the template.ParseFiles() function to read the files and store the
-	// templates in a template set. Notice that we use ... to pass the contents
-	// of the files slice as variadic arguments.
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
 
-	// Create an instance of a templateData struct holding the snippet data
-	data := &templateData{
-		Snippets: snippets,
-	}
+	data := app.newTemplateData(r)
+	data.Snippet = &snippet
 
-	// Use the ExecuteTemplate() method to write the content of the "base" template as the response body.
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
+	app.render(w, http.StatusOK, "view.tmpl.html", data)
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
@@ -108,7 +73,7 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	// ID of the new record back.
 	id, err := app.snippets.Insert(title, content, expires)
 	if err != nil {
-		app.serverError(w, r, err)
+		app.serverError(w, err)
 		return
 	}
 
