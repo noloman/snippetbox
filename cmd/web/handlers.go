@@ -21,26 +21,27 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range snippets {
-		fmt.Fprintf(w, "%+v\n", snippet)
+	files := []string{
+		"./ui/html/base.tmpl.html",
+		"./ui/html/partials/nav.tmpl.html",
+		"./ui/html/pages/home.tmpl.html",
 	}
 
-	// files := []string{
-	//     "./ui/html/base.tmpl",
-	//     "./ui/html/partials/nav.tmpl",
-	//     "./ui/html/pages/home.tmpl",
-	// }
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 
-	// ts, err := template.ParseFiles(files...)
-	// if err != nil {
-	//     app.serverError(w, r, err)
-	//     return
-	// }
+	// Create an instance of a templateData struct holding the snippet data
+	data := &templateData{
+		Snippets: snippets,
+	}
 
-	// err = ts.ExecuteTemplate(w, "base", nil)
-	// if err != nil {
-	//     app.serverError(w, r, err)
-	// }
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +53,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	// Use the SnippetModel's Get() method to retrieve the data for a
 	// specific record based on its ID. If no matching record is found,
 	// return a 404 Not Found response.
-	snippet, err := app.snippets.Get(id)
+	snippets, err := app.snippets.Latest()
 	if err != nil {
 		if errors.Is(err, models.ErrNoRecord) {
 			app.notFound(w)
@@ -74,9 +75,9 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create an instance of a tempalteData struct holding the snippet data
-	data := templateData{
-		Snippet: snippet,
+	// Create an instance of a templateData struct holding the snippet data
+	data := &templateData{
+		Snippets: snippets,
 	}
 
 	// Use the ExecuteTemplate() method to write the content of the "base" template as the response body.
