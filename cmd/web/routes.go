@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func (app *application) routes() *http.ServeMux {
+func (app *application) routes() http.Handler {
 	// Register the two new handler functions and corresponding URL patterns with
 	// the servemux, in exactly the same way that we did before.
 	mux := http.NewServeMux()
@@ -23,5 +23,8 @@ func (app *application) routes() *http.ServeMux {
 	mux.HandleFunc("/snippet/view", app.snippetView)
 	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
-	return mux
+	// Pass the servemux as the 'next' parameter to the secureHeaders middleware.
+	// Because secureHeaders is just a function, and the function returns a
+	// http.Handler we don't need to do anything else.
+	return secureHeaders(mux)
 }
