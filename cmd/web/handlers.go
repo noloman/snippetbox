@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/julienschmidt/httprouter"
 	"github.com/noloman/snippetbox/internal/models"
 	"net/http"
 	"strconv"
@@ -30,7 +31,14 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
-	id, err := strconv.Atoi(r.URL.Query().Get("id"))
+	// When httprouter is parsing a request, the values of any named parameters
+	// will be stored in the request context. We'll talk about request context
+	// in detail later in the book, but for now it's enough to know that you can
+	// use the ParamsFromContext() function to retrieve a slice containing these
+	// parameter names and values like so:
+	params := httprouter.ParamsFromContext(r.Context())
+
+	id, err := strconv.Atoi(params.ByName("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
 		return
@@ -54,16 +62,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		// Use the Header().Set() method to add an 'Allow: POST' header to the
-		// response header map. The first parameter is the header name, and
-		// the second parameter is the header value.
-		w.Header().Set("Allow", "POST")
-		app.clientError(w, http.StatusNotFound)
-		w.Header()
-		return
-	}
+	w.Write([]byte("Display the form for creating a new snippet..."))
+}
 
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	// Create some variables holding dummy data. We'll remove these later on
 	// during the build.
 	title := "0 snail"
@@ -78,5 +80,5 @@ func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect the user to the relevant page for the snippet
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view?id=%d", id), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/&d", id), http.StatusSeeOther)
 }
