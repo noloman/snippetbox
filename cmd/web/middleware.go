@@ -35,7 +35,7 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 				w.Header().Set("Connection", "Close")
 				// Call the app.serverError helper method to return a 500
 				// Internal Server response.
-				app.serverError(w, fmt.Errorf("%s", err))
+				app.serverError(w, r, fmt.Errorf("%s", err))
 			}
 		}()
 		next.ServeHTTP(w, r)
