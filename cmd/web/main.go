@@ -78,7 +78,7 @@ func main() {
 
 	// Use the Info() method to log the starting server message at Info severity
 	// (along with the listen address as an attribute).
-	infoLog.Printf("starting server", *addr)
+	infoLog.Printf("starting server %s", *addr)
 
 	err = http.ListenAndServe(*addr, app.routes())
 	errorLog.Fatal(err)
