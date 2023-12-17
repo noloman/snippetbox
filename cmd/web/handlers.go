@@ -3,14 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
-	"net/http"
-	"strconv"
-	"strings"
-	"unicode/utf8"
-
 	"github.com/julienschmidt/httprouter"
 	"github.com/noloman/snippetbox/internal/models"
 	"github.com/noloman/snippetbox/internal/validator"
+	"net/http"
+	"strconv"
 )
 
 // Define a snippetCreateForm struct to represent the form data and validation
@@ -93,11 +90,6 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	// Use the r.PostForm.Get() method to retrieve the title and content
-	// from the r.PostForm map.
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
 
 	// The r.PostForm.Get() method always returns the form data as a *string*.
 	// However, we're expecting our expires value to be a number, and want to
