@@ -82,6 +82,11 @@ func main() {
 	sessionManager := scs.New()
 	sessionManager.Store = mysqlstore.New(db)
 	sessionManager.Lifetime = 12 * time.Hour // 12 hours
+	// Make sure that the Secure attribute is set on our session cookies.
+	// Setting this means that the cookie will only be sent by a user's web
+	// browser when a HTTPS connection is being used (and won't be sent over an
+	// unsecure HTTP connection).
+	sessionManager.Cookie.Secure = true
 
 	// Initialize a models.SnippetModel instance containing the connection pool
 	// and add it to the application dependencies.
@@ -94,12 +99,20 @@ func main() {
 		sessionManager: sessionManager,
 	}
 
-	// Use the Info() method to log the starting server message at Info severity
-	// (along with the listen address as an attribute).
-	infoLog.Printf("starting server %s", *addr)
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.routes(),
+		// Create a *log.Logger from our structured logger handler, which writes
+		// log entries at Error level, and assign it to the ErrorLog field. If
+		// you would prefer to log the server errors at Warn level instead, you
+		// could pass slog.LevelWarn as the final parameter.
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
+	}
 
-	err = http.ListenAndServe(*addr, app.routes())
-	errorLog.Fatal(err)
+	logger.Info("starting server", "addr", *addr)
+	err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	logger.Error(err.Error())
+	os.Exit(1)
 }
 
 func openDB(dsn string) (*sql.DB, error) {
