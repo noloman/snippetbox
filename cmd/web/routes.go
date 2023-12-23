@@ -29,6 +29,12 @@ func (app *application) routes() http.Handler {
 	router.Handler(http.MethodGet, "/snippet/create", dynamic.ThenFunc(app.snippetCreate))
 	router.Handler(http.MethodPost, "/snippet/create", dynamic.ThenFunc(app.snippetCreatePost))
 
+	router.Handler(http.MethodGet, "/snippet/user/signup", dynamic.ThenFunc(app.userSignup))
+	router.Handler(http.MethodPost, "/snippet/user/signup", dynamic.ThenFunc(app.userSignupPost))
+	router.Handler(http.MethodGet, "/snippet/user/login", dynamic.ThenFunc(app.userLogin))
+	router.Handler(http.MethodPost, "/snippet/user/login", dynamic.ThenFunc(app.userLoginPost))
+	router.Handler(http.MethodPost, "/snippet/user/logout", dynamic.ThenFunc(app.userLogoutPost))
+
 	// Create a middleware chain containing our 'standard' middleware
 	// which will be used for every request our application receives.
 
