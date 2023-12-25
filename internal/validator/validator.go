@@ -7,7 +7,13 @@ import (
 )
 
 type Validator struct {
-	FieldErrors map[string]string
+	NonFieldErrors []string
+	FieldErrors    map[string]string
+}
+
+// AddNonFieldError creates an AddNonFieldError() helper for adding error messages to the new NonFieldErrors slice.
+func (v *Validator) AddNonFieldError(message string) {
+	v.NonFieldErrors = append(v.NonFieldErrors, message)
 }
 
 // EmailRegex uses the regexp.MustCompile() function to parse a regular expression pattern
@@ -28,7 +34,7 @@ func Matches(value string, rx *regexp.Regexp) bool {
 }
 
 func (v *Validator) Valid() bool {
-	return len(v.FieldErrors) == 0
+	return len(v.FieldErrors) == 0 && len(v.NonFieldErrors) == 0
 }
 
 func (v *Validator) AddError(key, message string) {
