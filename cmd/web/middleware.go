@@ -33,11 +33,25 @@ func (app *application) recoverPanic(next http.Handler) http.Handler {
 			// Use the builtin recover function to check if there has been a panic or not. If there has...
 			if err := recover(); err != nil {
 				w.Header().Set("Connection", "Close")
-				// Call the app.serverError helper method to return a 500
-				// Internal Server response.
+				// Call the app.serverError helper method to return a 500 Internal Server response.
 				app.serverError(w, r, fmt.Errorf("%s", err))
 			}
 		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) requireAuthentication(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If the user is not authenticated, redirect them to the login page and return from the middleware chain so that no subsequent handlers in the chain are executed.
+		if !app.isAuthenticated(r) {
+			http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+			return
+		}
+		// Otherwise set the "Cache-Control: no-store" header so that pages
+		// require authentication are not stored in the users browser cache (or
+		// other intermediary cache).
+		w.Header().Add("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
 	})
 }

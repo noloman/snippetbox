@@ -72,9 +72,7 @@ func main() {
 	// before the main() function exits.
 	defer db.Close()
 
-	// Initialize a new template cache
 	templateCache, err := newTemplateCache()
-
 	formDecoder := form.NewDecoder()
 
 	// Use the scs.New() function to initialize a new session manager. Then we
