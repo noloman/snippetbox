@@ -73,6 +73,10 @@ func main() {
 	defer db.Close()
 
 	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 	formDecoder := form.NewDecoder()
 
 	// Use the scs.New() function to initialize a new session manager. Then we
@@ -106,6 +110,7 @@ func main() {
 	// assembly implementations are used.
 	tlsConfig := &tls.Config{
 		CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+		MinVersion:       tls.VersionTLS13,
 	}
 
 	srv := &http.Server{

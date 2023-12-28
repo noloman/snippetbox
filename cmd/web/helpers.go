@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 	"time"
+
+	"github.com/justinas/nosurf"
 )
 
 // The serverError helper writes a log entry at Error level (including the request
@@ -13,7 +15,7 @@ import (
 // response to the user.
 func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
-	app.errorLog.Output(2, trace)
+	_ = app.errorLog.Output(2, trace)
 	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
@@ -36,6 +38,7 @@ func (app *application) newTemplateData(r *http.Request) *templateData {
 		CurrentYear:     time.Now().Year(),
 		Flash:           app.sessionManager.PopString(r.Context(), "flash"),
 		IsAuthenticated: app.isAuthenticated(r),
+		CSRFToken:       nosurf.Token(r),
 	}
 }
 
@@ -68,7 +71,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, status in
 	// Write the contents of the buffer to the http.ResponseWriter. Note: this
 	// is another time where we pass our http.ResponseWriter to a function that
 	// takes an io.Writer.
-	buf.WriteTo(w)
+	_, _ = buf.WriteTo(w)
 }
 
 func (app *application) isAuthenticated(r *http.Request) bool {
