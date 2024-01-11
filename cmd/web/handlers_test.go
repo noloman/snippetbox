@@ -2,22 +2,20 @@ package main
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/noloman/snippetbox/internal/assert"
 )
 
 func TestPing(t *testing.T) {
-	rr := httptest.NewRecorder()
+	t.Parallel()
+	app := newApplication(t)
 
-	r, err := http.NewRequest(http.MethodGet, "/", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ping(rr, r)
+	ts := newTestServer(t, app.routes())
+	defer ts.Close()
 
-	rs := rr.Result()
+	code, _, body := ts.get(t, "/ping")
 
-	assert.Equal(t, http.StatusOK, rs.StatusCode)
+	assert.Equal(t, code, http.StatusOK)
+	assert.Equal(t, string(body), "OK")
 }
