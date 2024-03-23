@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (Snippet, error)
+	Latest() ([]Snippet, error)
+}
+
 // Define a Snippet type to hold the data for an individual snippet. Notice how
 // the fields of the struct correspond to the fields in our MySQL snippets table?
 type Snippet struct {
@@ -78,7 +84,7 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 }
 
 // This will return the 10 most recently created snippets
-func (m *SnippetModel) Latest() ([]*Snippet, error) {
+func (m *SnippetModel) Latest() ([]Snippet, error) {
 	// Write the SQL statement we want to execute
 	stmt := `SELECT id, title, content, created, expires FROM snippets WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
 
@@ -96,8 +102,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 	// trying to close a nil resultset.
 	defer rows.Close()
 
-	// Initialize an empty slice to hold the Snippet structs
-	var snippets []*Snippet
+	var snippets []Snippet
 
 	// Use rows.Next to iterate through the rows in the resultset. This
 	// prepares the first (and then each subsequent) row to be acted on by the
@@ -119,7 +124,7 @@ func (m *SnippetModel) Latest() ([]*Snippet, error) {
 			return nil, err
 		}
 		// Append it to the slice of snippets.
-		snippets = append(snippets, &s)
+		snippets = append(snippets, s)
 	}
 	// When the rows.Next() loop has finished we call rows.Err() to retrieve any
 	// error that was encountered during the iteration. It's important to
