@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"io/fs"
 	"path/filepath"
@@ -11,10 +10,6 @@ import (
 	"github.com/noloman/snippetbox/ui"
 )
 
-// Define a templateData type to act as the holding structure for
-// any dynamic data that we want to pass to our HTML templates.
-// At the moment it only contains one field, but we'll add more
-// to it as the build progresses.
 type templateData struct {
 	CurrentYear     int
 	Snippet         *models.Snippet
@@ -42,7 +37,6 @@ var functions = template.FuncMap{
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
-	// Initialize a new map to act as cache
 	cache := map[string]*template.Template{}
 
 	// Use the filepath.Glob() function to get a slice of all filepaths that
@@ -55,15 +49,9 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		return nil, err
 	}
 
-	// Loop through the page filepaths one by one
 	for _, page := range pages {
-		// Extract the filename from the full filepath and assign it to the name variable.
 		name := filepath.Base(page)
 
-		// Use fs.Glob() to get a slice of all filepaths in the ui.Files embedded
-		// filesystem which match the pattern 'html/pages/*.tmpl'. This essentially
-		// gives us a slice of all the 'page' templates for the application, just
-		// like before.
 		patterns := []string{
 			"html/base.tmpl.html",
 			"html/partials/*.tmpl.html",
@@ -75,13 +63,11 @@ func newTemplateCache() (map[string]*template.Template, error) {
 		// create an empty template set, use the Funcs() method to register the
 		// template.FuncMap, and then parse the file as normal.
 		ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
-		fmt.Println(ts, err)
 		if err != nil {
 			return nil, err
 		}
 		cache[name] = ts
 	}
 	// return the map
-	fmt.Println("Cache: ", cache)
 	return cache, nil
 }
