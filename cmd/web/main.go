@@ -15,12 +15,6 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
-
-	// Import the models package that we just created. You need to prefix this with
-	// whatever module path you set up back in chapter 02.01 (Project Setup and Creating
-	// a Module) so that the import statement looks like this:
-	// "{your-module-path}/internal/models". If you can't remember what module path you
-	// used, you can find it at the top of the go.mod file.
 	"github.com/noloman/snippetbox/internal/models"
 )
 
