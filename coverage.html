@@ -1,0 +1,1262 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>web: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/noloman/snippetbox/cmd/web/handlers.go (27.4%)</option>
+				
+				<option value="file1">github.com/noloman/snippetbox/cmd/web/helpers.go (59.1%)</option>
+				
+				<option value="file2">github.com/noloman/snippetbox/cmd/web/main.go (0.0%)</option>
+				
+				<option value="file3">github.com/noloman/snippetbox/cmd/web/middleware.go (60.5%)</option>
+				
+				<option value="file4">github.com/noloman/snippetbox/cmd/web/routes.go (100.0%)</option>
+				
+				<option value="file5">github.com/noloman/snippetbox/cmd/web/templates.go (86.7%)</option>
+				
+				<option value="file6">github.com/noloman/snippetbox/internal/assert/assert.go (66.7%)</option>
+				
+				<option value="file7">github.com/noloman/snippetbox/internal/models/mocks/snippets.go (60.0%)</option>
+				
+				<option value="file8">github.com/noloman/snippetbox/internal/models/mocks/users.go (22.2%)</option>
+				
+				<option value="file9">github.com/noloman/snippetbox/internal/models/snippets.go (0.0%)</option>
+				
+				<option value="file10">github.com/noloman/snippetbox/internal/models/users.go (13.0%)</option>
+				
+				<option value="file11">github.com/noloman/snippetbox/internal/validator/validator.go (31.2%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package main
+
+import (
+        "errors"
+        "fmt"
+        "net/http"
+        "strconv"
+
+        "github.com/go-playground/form/v4"
+        "github.com/julienschmidt/httprouter"
+        "github.com/noloman/snippetbox/internal/models"
+        "github.com/noloman/snippetbox/internal/validator"
+)
+
+// Define a snippetCreateForm struct to represent the form data and validation
+// errors for the form fields. Note that all the struct fields are deliberately
+// exported (i.e. start with a capital letter). This is because struct fields
+// must be exported in order to be read by the html/template package when
+// rendering the template.
+type snippetCreateForm struct {
+        Title               string `form:"title"`
+        Content             string `form:"content"`
+        Expires             int    `form:"expires"`
+        validator.Validator `form:"-"`
+}
+
+func ping(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+    w.Write([]byte("OK"))
+}</span>
+
+func (app *application) home(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        if r.URL.Path != "/" </span><span class="cov0" title="0">{
+                http.NotFound(w, r)
+                return
+        }</span>
+
+        <span class="cov0" title="0">snippets, err := app.snippets.Latest()
+        if err != nil </span><span class="cov0" title="0">{
+                app.serverError(w, r, err)
+                return
+        }</span>
+
+        // Call the newTemplateData() helper to get a templateData struct containing
+        // the 'default' data (which for now is just the current year), and add the
+        // snippets slice to it.
+        <span class="cov0" title="0">data := app.newTemplateData(r)
+        data.Snippets = snippets
+
+        app.render(w, r, http.StatusOK, "home.tmpl.html", data)</span>
+}
+
+func (app *application) snippetView(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        // When httprouter is parsing a request, the values of any named parameters
+        // will be stored in the request context. We'll talk about request context
+        // in detail later in the book, but for now it's enough to know that you can
+        // use the ParamsFromContext() function to retrieve a slice containing these
+        // parameter names and values like so:
+        params := httprouter.ParamsFromContext(r.Context())
+
+        id, err := strconv.Atoi(params.ByName("id"))
+        if err != nil || id &lt; 1 </span><span class="cov8" title="1">{
+                app.notFound(w)
+                return
+        }</span>
+        // Use the SnippetModel's Get() method to retrieve the data for a
+        // specific record based on its ID. If no matching record is found,
+        // return a 404 Not Found response.
+        <span class="cov8" title="1">snippet, err := app.snippets.Get(id)
+        if err != nil </span><span class="cov8" title="1">{
+                if errors.Is(err, models.ErrNoRecord) </span><span class="cov8" title="1">{
+                        app.notFound(w)
+                }</span> else<span class="cov0" title="0"> {
+                        app.serverError(w, r, err)
+                }</span>
+        }
+
+        <span class="cov8" title="1">data := app.newTemplateData(r)
+        data.Snippet = &amp;snippet
+
+        app.render(w, r, http.StatusOK, "view.tmpl.html", data)</span>
+}
+
+func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        data := app.newTemplateData(r)
+        data.Form = &amp;snippetCreateForm{Expires: 365}
+        app.render(w, r, http.StatusOK, "create.tmpl.html", data)
+}</span>
+
+func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var form snippetCreateForm
+
+        err := app.decodePostForm(r, &amp;form)
+        if err != nil </span><span class="cov0" title="0">{
+                app.clientError(w, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">form.CheckField(validator.NotBlank(form.Title), "title", "This field can't be blank")
+        form.CheckField(validator.MaxChar(form.Title, 100), "title", "This field can't be blank")
+        form.CheckField(validator.NotBlank(form.Content), "content", "This field can't be blank")
+        form.CheckField(validator.PermittedValues(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+        if !form.Valid() </span><span class="cov0" title="0">{
+                data := app.newTemplateData(r)
+                data.Form = form
+                app.render(w, r, http.StatusUnprocessableEntity, "create.tmpl.html", data)
+                return
+        }</span>
+        // We also need to update this line to pass the data from the
+        // snippetCreateForm instance to our Insert() method.
+        <span class="cov0" title="0">id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
+        if err != nil </span><span class="cov0" title="0">{
+                app.clientError(w, http.StatusBadRequest)
+                return
+        }</span>
+
+        // Use the Put() method to add a string value ("Snippet successfully created!")
+        // and the corresponding key ("flash") to the session data.
+        <span class="cov0" title="0">app.sessionManager.Put(r.Context(), "flash", "Snippet successfully created!")
+
+        http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)</span>
+}
+
+// Create a new decodePostForm() helper method. The second parameter here, dst,
+// is the target destination that we want to decode the form data into.
+func (app *application) decodePostForm(r *http.Request, dst any) error <span class="cov8" title="1">{
+        err := r.ParseForm()
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">err = app.formDecoder.Decode(dst, r.PostForm)
+        if err != nil </span><span class="cov0" title="0">{
+                // If we try to use an invalid target destination, the Decode() method
+                // will return an error with the type *form.InvalidDecoderError.We use
+                // errors.As() to check for this and raise a panic rather than returning
+                // the error.
+                var InvalidDecoderError *form.InvalidDecoderError
+
+                if errors.As(err, &amp;InvalidDecoderError) </span><span class="cov0" title="0">{
+                        panic(err)</span>
+                }
+                // For all other errors, we return them as normal.
+                <span class="cov0" title="0">return err</span>
+        }
+        <span class="cov8" title="1">return nil</span>
+}
+
+type userSignupForm struct {
+        Name                string `form:"name"`
+        Email               string `form:"email"`
+        Password            string `form:"password"`
+        validator.Validator `form:"-"`
+}
+
+type userLoginForm struct {
+        Email               string `form:"email"`
+        Password            string `form:"password"`
+        validator.Validator `form:"-"`
+}
+
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        data := app.newTemplateData(r)
+        data.Form = userSignupForm{}
+        app.render(w, r, http.StatusOK, "signup.tmpl.html", data)
+}</span>
+
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        // Declare an zero-valued instance of our userSignupForm struct.
+        var form userSignupForm
+        // Parse the form data into the userSignupForm struct.
+        err := app.decodePostForm(r, &amp;form)
+        if err != nil </span><span class="cov0" title="0">{
+                app.clientError(w, http.StatusBadRequest)
+                return
+        }</span>
+        // Validate the form contents using our helper functions.
+        <span class="cov8" title="1">form.CheckField(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+        form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+        form.CheckField(validator.Matches(form.Email, validator.EmailRegex), "email", "This field must be a valid email address")
+        form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+        form.CheckField(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+
+        // If there are any errors, redisplay the signup form along with a 422 status code.
+        if !form.Valid() </span><span class="cov0" title="0">{
+                data := app.newTemplateData(r)
+                data.Form = form
+                app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+                return
+        }</span>
+        <span class="cov8" title="1">err = app.userModel.Insert(form.Name, form.Email, form.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, models.ErrDuplicateEmail) </span><span class="cov0" title="0">{
+                        form.AddError("email", "Address is already in use")
+                        data := app.newTemplateData(r)
+                        data.Form = form
+                        app.render(w, r, http.StatusUnprocessableEntity, "signup.tmpl.html", data)
+                }</span> else<span class="cov0" title="0"> {
+                        app.serverError(w, r, err)
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+        <span class="cov8" title="1">app.sessionManager.Put(r.Context(), "flash", "Your signup was successful. Please log in.")
+        http.Redirect(w, r, "/user/login", http.StatusSeeOther)</span>
+}
+
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        data := app.newTemplateData(r)
+        data.Form = userLoginForm{}
+        app.render(w, r, http.StatusOK, "login.tmpl.html", data)
+}</span>
+
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        var form userLoginForm
+
+        err := app.decodePostForm(r, &amp;form)
+        if err != nil </span><span class="cov0" title="0">{
+                app.clientError(w, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov0" title="0">form.CheckField(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+        form.CheckField(validator.Matches(form.Email, validator.EmailRegex), "email", "This field must be a valid email address")
+        form.CheckField(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+        if !form.Valid() </span><span class="cov0" title="0">{
+                data := app.newTemplateData(r)
+                data.Form = form
+                app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+                return
+        }</span>
+
+        <span class="cov0" title="0">id, err := app.userModel.Authenticate(form.Email, form.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, models.ErrInvalidCredentials) </span><span class="cov0" title="0">{
+                        form.AddNonFieldError("Email or Password is incorrect")
+                        data := app.newTemplateData(r)
+                        data.Form = form
+                        app.render(w, r, http.StatusUnprocessableEntity, "login.tmpl.html", data)
+                }</span> else<span class="cov0" title="0"> {
+                        app.serverError(w, r, err)
+                }</span>
+                <span class="cov0" title="0">return</span>
+        }
+
+        // Use the RenewToken() method on the current session to change the session
+        // ID. It's good practice to generate a new session ID when the
+        // authentication state or privilege levels changes for the user (e.g. login
+        // and logout operations).
+        <span class="cov0" title="0">err = app.sessionManager.RenewToken(r.Context())
+        if err != nil </span><span class="cov0" title="0">{
+                app.serverError(w, r, err)
+                return
+        }</span>
+
+        // Add the ID of the current user to the session, so that they are now
+        // 'logged in'.
+        <span class="cov0" title="0">app.sessionManager.Put(r.Context(), "authenticatedUserID", id)
+        // Redirect the user to the create snippet page.
+        http.Redirect(w, r, "/snippet/create", http.StatusSeeOther)</span>
+}
+
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) <span class="cov0" title="0">{
+        // Use the RenewToken() method on the current session to change the session ID again.
+        err := app.sessionManager.RenewToken(r.Context())
+        if err != nil </span><span class="cov0" title="0">{
+                app.serverError(w, r, err)
+                return
+        }</span>
+        <span class="cov0" title="0">app.sessionManager.Remove(r.Context(), "authenticatedUserID")
+        app.sessionManager.Put(r.Context(), "flash", "You've been logged out successfully!")
+        http.Redirect(w, r, "/", http.StatusSeeOther)</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package main
+
+import (
+        "bytes"
+        "fmt"
+        "net/http"
+        "runtime/debug"
+        "time"
+
+        "github.com/justinas/nosurf"
+)
+
+// The serverError helper writes a log entry at Error level (including the request
+// method and URI as attributes), then sends a generic 500 Internal Server Error
+// response to the user.
+func (app *application) serverError(w http.ResponseWriter, r *http.Request, err error) <span class="cov0" title="0">{
+        trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
+        _ = app.errorLog.Output(2, trace)
+        http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}</span>
+
+// The clientError helper sends a specific status code and corresponding description
+// to the user. We'll use this later in the book to send responses like 400 "Bad
+// Request" when there's a problem with the request that the user sent.
+func (app *application) clientError(w http.ResponseWriter, status int) <span class="cov8" title="1">{
+        http.Error(w, http.StatusText(status), status)
+}</span>
+
+// For consistency, we'll also implement a notFound helper. This is simply a
+// convenience wrapper around clientError which sends a 404 Not Found response to
+// the user.
+func (app *application) notFound(w http.ResponseWriter) <span class="cov8" title="1">{
+        app.clientError(w, http.StatusNotFound)
+}</span>
+
+func (app *application) newTemplateData(r *http.Request) *templateData <span class="cov8" title="1">{
+        return &amp;templateData{
+                CurrentYear:     time.Now().Year(),
+                Flash:           app.sessionManager.PopString(r.Context(), "flash"),
+                IsAuthenticated: app.isAuthenticated(r),
+                CSRFToken:       nosurf.Token(r),
+        }
+}</span>
+
+func (app *application) render(w http.ResponseWriter, r *http.Request, status int, page string, data *templateData) <span class="cov8" title="1">{
+        // Retrieve the appropriate template set from the cache based on the page
+        // name (like 'home.tmpl'). If no entry exists in the cache with the
+        // provided name, then create a new error and call the serverError() helper
+        // method that we made earlier and return.
+        ts, ok := app.templateCache[page]
+        if !ok </span><span class="cov0" title="0">{
+                err := fmt.Errorf("the template %s does not exist", page)
+                app.serverError(w, r, err)
+                return
+        }</span>
+
+        <span class="cov8" title="1">buf := new(bytes.Buffer)
+        // Write the template to the buffer, instead of straight to the
+        // http.ResponseWriter. If there's an error, call our serverError() helper
+        // and then return.
+        err := ts.ExecuteTemplate(buf, "base", data)
+        if err != nil </span><span class="cov0" title="0">{
+                app.serverError(w, r, err)
+                return
+        }</span>
+
+        // If the template is written to the buffer without any errors, we are safe
+        // to go ahead and write the HTTP status code to http.ResponseWriter.
+        <span class="cov8" title="1">w.WriteHeader(status)
+
+        // Write the contents of the buffer to the http.ResponseWriter. Note: this
+        // is another time where we pass our http.ResponseWriter to a function that
+        // takes an io.Writer.
+        _, _ = buf.WriteTo(w)</span>
+}
+
+func (app *application) isAuthenticated(r *http.Request) bool <span class="cov8" title="1">{
+        isAuthenticated, ok := r.Context().Value(isAuthenticatedContextKey).(bool)
+        if !ok </span><span class="cov8" title="1">{
+                return false
+        }</span>
+        <span class="cov0" title="0">return isAuthenticated</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package main
+
+import (
+        "crypto/tls"
+        "database/sql"
+        "flag"
+        "html/template"
+        "log"
+        "log/slog"
+        "net/http"
+        "os"
+        "time"
+
+        "github.com/alexedwards/scs/mysqlstore"
+        "github.com/alexedwards/scs/v2"
+        "github.com/go-playground/form/v4"
+        _ "github.com/go-sql-driver/mysql"
+        "github.com/noloman/snippetbox/internal/models"
+)
+
+type application struct {
+        errorLog       *log.Logger
+        infoLog        *log.Logger
+        snippets       models.SnippetModelInterface
+        userModel      models.UserModelInterface
+        templateCache  map[string]*template.Template
+        formDecoder    *form.Decoder
+        sessionManager *scs.SessionManager
+}
+
+func main() <span class="cov0" title="0">{
+        // Define a new command-line flag with the name 'addr', a default value of ":4000"
+        // and some short help text explaining what the flag controls. The value of the
+        // flag will be stored in the addr variable at runtime.
+        addr := flag.String("addr", ":4000", "HTTP Network Address")
+
+        dsn := flag.String("dsn", "web:test01@/snippetbox?parseTime=true", "MySQL data source name")
+
+        // Importantly, we use the flag.Parse() function to parse the command-line flag.
+        // This reads in the command-line flag value and assigns it to the addr
+        // variable. You need to call this *before* you use the addr variable
+        // otherwise it will always contain the default value of ":4000". If any errors are
+        // encountered during parsing the application will be terminated.
+        flag.Parse()
+
+        infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+        errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+        // Use the slog.New() function to initialize a new structured logger, which
+        // writes to the standard out stream and uses the default settings.
+        logger := slog.New(slog.NewTextHandler(os.Stdout, &amp;slog.HandlerOptions{
+                Level:     slog.LevelDebug,
+                AddSource: true,
+        }))
+
+        // To keep the main() function tidy I've put the code for creating a connection
+        // pool into the separate openDB() function below. We pass openDB() the DSN
+        // from the command-line flag.
+        db, err := openDB(*dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err.Error())
+                os.Exit(1)
+        }</span>
+
+        // We also defer a call to db.Close(), so that the connection pool is closed
+        // before the main() function exits.
+        <span class="cov0" title="0">defer db.Close()
+
+        templateCache, err := newTemplateCache()
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Error(err.Error())
+                os.Exit(1)
+        }</span>
+        <span class="cov0" title="0">formDecoder := form.NewDecoder()
+
+        // Use the scs.New() function to initialize a new session manager. Then we
+        // configure it to use our MySQL database as the session store, and set a
+        // lifetime of 12 hours (so that sessions automatically expire 12 hours
+        // after first being created).
+        sessionManager := scs.New()
+        sessionManager.Store = mysqlstore.New(db)
+        sessionManager.Lifetime = 12 * time.Hour // 12 hours
+        // Make sure that the Secure attribute is set on our session cookies.
+        // Setting this means that the cookie will only be sent by a user's web
+        // browser when a HTTPS connection is being used (and won't be sent over an
+        // unsecure HTTP connection).
+        sessionManager.Cookie.Secure = true
+
+        // Initialize a models.SnippetModel instance containing the connection pool
+        // and add it to the application dependencies.
+        app := &amp;application{
+                errorLog:       errorLog,
+                infoLog:        infoLog,
+                snippets:       &amp;models.SnippetModel{DB: db},
+                userModel:      &amp;models.UserModel{DB: db},
+                templateCache:  templateCache,
+                formDecoder:    formDecoder,
+                sessionManager: sessionManager,
+        }
+
+        // Initialize a tls.Config struct to hold the non-default TLS settings we
+        // want the server to use. In this case the only thing that we're changing
+        // is the curve preferences value, so that only elliptic curves with
+        // assembly implementations are used.
+        tlsConfig := &amp;tls.Config{
+                CurvePreferences: []tls.CurveID{tls.X25519, tls.CurveP256},
+                MinVersion:       tls.VersionTLS13,
+        }
+
+        srv := &amp;http.Server{
+                Addr:    *addr,
+                Handler: app.routes(),
+                // Create a *log.Logger from our structured logger handler, which writes
+                // log entries at Error level, and assign it to the ErrorLog field. If
+                // you would prefer to log the server errors at Warn level instead, you
+                // could pass slog.LevelWarn as the final parameter.
+                ErrorLog:     slog.NewLogLogger(logger.Handler(), slog.LevelError),
+                TLSConfig:    tlsConfig,
+                IdleTimeout:  time.Minute,
+                ReadTimeout:  5 * time.Second,
+                WriteTimeout: 10 * time.Second,
+        }
+
+        logger.Info("starting server", "addr", *addr)
+        err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+        logger.Error(err.Error())
+        os.Exit(1)</span>
+}
+
+func openDB(dsn string) (*sql.DB, error) <span class="cov0" title="0">{
+        db, err := sql.Open("mysql", dsn)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">if err = db.Ping(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">return db, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package main
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+
+        "github.com/justinas/nosurf"
+)
+
+func noSurf(next http.Handler) http.Handler <span class="cov8" title="1">{
+        csrfHandler := nosurf.New(next)
+        csrfHandler.SetBaseCookie(http.Cookie{
+                HttpOnly: true,
+                Path:     "/",
+                Secure:   true,
+        })
+        return csrfHandler
+}</span>
+
+func (app *application) authenticate(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                // Retrieve the authenticatedUserID value from the session using the
+                // GetInt() method. This will return the zero value for an int (0) if no
+                // "authenticatedUserID" value is in the session -- in which case we
+                // call the next handler in the chain as normal and return.
+                id := app.sessionManager.GetInt(r.Context(), "authenticatedUserID")
+                if id == 0 </span><span class="cov8" title="1">{
+                        next.ServeHTTP(w, r)
+                        return
+                }</span>
+
+                // Otherwise, we check to see if a user with that ID exists in our database.
+                <span class="cov0" title="0">exists, err := app.userModel.Exists(id)
+                if err != nil </span><span class="cov0" title="0">{
+                        app.serverError(w, r, err)
+                        return
+                }</span>
+
+                // If a matching user is found, we know that the request is
+                // coming from an authenticated user who exists in our database. We
+                // create a new copy of the request (with an isAuthenticatedContextKey
+                // value of true in the request context) and assign it to r.
+                <span class="cov0" title="0">if exists </span><span class="cov0" title="0">{
+                        ctx := context.WithValue(r.Context(), isAuthenticatedContextKey, true)
+                        r = r.WithContext(ctx)
+                }</span>
+                <span class="cov0" title="0">next.ServeHTTP(w, r)</span>
+        })
+}
+
+func secureHeaders(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' fonts.googleapis.com; font-src fonts.gstatic.com")
+                w.Header().Set("Referrer-Policy", "origin-when-cross-origin")
+                w.Header().Set("X-Content-Type-Options", "nosniff")
+                w.Header().Set("X-Frame-Options", "deny")
+                w.Header().Set("X-XSS-Protection", "0")
+
+                next.ServeHTTP(w, r)
+        }</span>)
+}
+
+func (app *application) logRequest(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                app.infoLog.Printf("%s - %s %s %s", r.RemoteAddr, r.Proto, r.Method, r.URL.RequestURI())
+
+                next.ServeHTTP(w, r)
+        }</span>)
+}
+
+func (app *application) recoverPanic(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                // Create a deferred function (which will always be run in the event
+                // of a panic as Go unwinds the stack).
+                defer func() </span><span class="cov8" title="1">{
+                        // Use the builtin recover function to check if there has been a panic or not. If there has...
+                        if err := recover(); err != nil </span><span class="cov0" title="0">{
+                                w.Header().Set("Connection", "Close")
+                                // Call the app.serverError helper method to return a 500 Internal Server response.
+                                app.serverError(w, r, fmt.Errorf("%s", err))
+                        }</span>
+                }()
+                <span class="cov8" title="1">next.ServeHTTP(w, r)</span>
+        })
+}
+
+func (app *application) requireAuthentication(next http.Handler) http.Handler <span class="cov8" title="1">{
+        return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov0" title="0">{
+                // If the user is not authenticated, redirect them to the login page and return from the middleware chain so that no subsequent handlers in the chain are executed.
+                if !app.isAuthenticated(r) </span><span class="cov0" title="0">{
+                        http.Redirect(w, r, "/user/login", http.StatusSeeOther)
+                        return
+                }</span>
+                // Otherwise set the "Cache-Control: no-store" header so that pages
+                // require authentication are not stored in the users browser cache (or
+                // other intermediary cache).
+                <span class="cov0" title="0">w.Header().Add("Cache-Control", "no-store")
+                next.ServeHTTP(w, r)</span>
+        })
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package main
+
+import (
+        "net/http"
+
+        "github.com/julienschmidt/httprouter"
+        "github.com/justinas/alice"
+        "github.com/noloman/snippetbox/ui"
+)
+
+func (app *application) routes() http.Handler <span class="cov8" title="1">{
+        router := httprouter.New()
+        // Create a handler function which wraps our notFound() helper, and then
+        // assign it as the custom handler for 404 Not Found responses. You can also
+        // set a custom handler for 405 Method Not Allowed responses by setting
+        // router.MethodNotAllowed in the same way too.
+        router.NotFound = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) </span><span class="cov8" title="1">{
+                app.notFound(w)
+        }</span>)
+
+        // Take the ui.Files embedded filesystem and convert it to a http.FS type so
+        // that it satisfies the http.FileSystem interface. We then pass that to the
+        // http.FileServer() function to create the file server HTTP handler.
+        <span class="cov8" title="1">fileServer := http.FileServer(http.FS(ui.Files))
+        // Our static files are contained in the "static" folder of the ui.Files
+        // embedded filesystem. So, for example, our CSS stylesheet is located at
+        // "static/css/main.css". This means that we no longer need to strip the
+        // prefix from the request URL -- any requests that start with /static/ can
+        // just be passed directly to the file server and the corresponding static
+        // file will be served (so long as it exists).
+        router.Handler(http.MethodGet, "/static/*filepath", fileServer)
+
+        router.HandlerFunc(http.MethodGet, "/ping", ping)
+
+        // Unprotected application routes using the "dynamic" middleware chain.
+        dynamic := alice.New(app.sessionManager.LoadAndSave, noSurf, app.authenticate)
+
+        router.Handler(http.MethodGet, "/", dynamic.ThenFunc(app.home))
+        router.Handler(http.MethodGet, "/snippet/view/:id", dynamic.ThenFunc(app.snippetView))
+        router.Handler(http.MethodGet, "/user/signup", dynamic.ThenFunc(app.userSignup))
+        router.Handler(http.MethodPost, "/user/signup", dynamic.ThenFunc(app.userSignupPost))
+        router.Handler(http.MethodGet, "/user/login", dynamic.ThenFunc(app.userLogin))
+        router.Handler(http.MethodPost, "/user/login", dynamic.ThenFunc(app.userLoginPost))
+
+        protected := dynamic.Append(app.requireAuthentication)
+        router.Handler(http.MethodGet, "/snippet/create", protected.ThenFunc(app.snippetCreate))
+        router.Handler(http.MethodPost, "/snippet/create", protected.ThenFunc(app.snippetCreatePost))
+        router.Handler(http.MethodPost, "/user/logout", protected.ThenFunc(app.userLogoutPost))
+
+        // Create a middleware chain containing our 'standard' middleware
+        // which will be used for every request our application receives.
+
+        standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders)
+
+        // Return the 'standard' middleware chain followed by the servemux.
+        return standard.Then(router)</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package main
+
+import (
+        "html/template"
+        "io/fs"
+        "path/filepath"
+        "time"
+
+        "github.com/noloman/snippetbox/internal/models"
+        "github.com/noloman/snippetbox/ui"
+)
+
+type templateData struct {
+        CurrentYear     int
+        Snippet         *models.Snippet
+        Snippets        []models.Snippet
+        Form            any
+        Flash           string
+        IsAuthenticated bool
+        CSRFToken       string
+}
+
+// Create a humanDate function which returns a nicely formatted string
+// representation of a time.Time object.
+func humanDate(t time.Time) string <span class="cov8" title="1">{
+        if t.IsZero() </span><span class="cov8" title="1">{
+                return ""
+        }</span>
+        <span class="cov8" title="1">return t.UTC().Format("02 Jan 2006 at 15:04")</span>
+}
+
+// Initialize a template.FuncMap object and store it in a global variable. This is
+// essentially a string-keyed map which acts as a lookup between the names of our
+// custom template functions and the functions themselves.
+var functions = template.FuncMap{
+        "humanDate": humanDate,
+}
+
+func newTemplateCache() (map[string]*template.Template, error) <span class="cov8" title="1">{
+        cache := map[string]*template.Template{}
+
+        // Use the filepath.Glob() function to get a slice of all filepaths that
+        // match the pattern "./ui/html/pages/*.tmpl.html". This will essentially give
+        // us a slice of all the filepaths for our application 'page' templates
+        // like: [ui/html/pages/home.tmpl.html ui/html/pages/view.tmpl.html]
+
+        pages, err := fs.Glob(ui.Files, "html/pages/*.tmpl.html")
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">for _, page := range pages </span><span class="cov8" title="1">{
+                name := filepath.Base(page)
+
+                patterns := []string{
+                        "html/base.tmpl.html",
+                        "html/partials/*.tmpl.html",
+                        page,
+                }
+
+                // The template.FuncMap must be registered with the template set before you
+                // call the ParseFiles() method. This means we have to use template.New() to
+                // create an empty template set, use the Funcs() method to register the
+                // template.FuncMap, and then parse the file as normal.
+                ts, err := template.New(name).Funcs(functions).ParseFS(ui.Files, patterns...)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov8" title="1">cache[name] = ts</span>
+        }
+        // return the map
+        <span class="cov8" title="1">return cache, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package assert
+
+import (
+        "strings"
+        "testing"
+)
+
+func Equal[T comparable](t *testing.T, actual, expected T) <span class="cov8" title="1">{
+        t.Helper()
+        if actual != expected </span><span class="cov0" title="0">{
+                t.Errorf("got %v want %v", actual, expected)
+        }</span>
+}
+
+func StringContains(t *testing.T, actual, expectedSubstring string) <span class="cov8" title="1">{
+        t.Helper()
+
+        if !strings.Contains(actual, expectedSubstring) </span><span class="cov0" title="0">{
+                t.Errorf("got: %q; expected to contain: %q", actual, expectedSubstring)
+        }</span>
+}
+
+func NilError(t *testing.T, actual error) <span class="cov8" title="1">{
+        t.Helper()
+
+        if actual != nil </span><span class="cov0" title="0">{
+                t.Errorf("got: %v; expected: nil", actual)
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package mocks
+
+import (
+        "github.com/noloman/snippetbox/internal/models"
+        "time"
+)
+
+var mockSnippet = models.Snippet{
+        ID:      1,
+        Title:   "An old silent pond",
+        Content: "An old silent pond...",
+        Created: time.Now(),
+        Expires: time.Now(),
+}
+
+type SnippetModel struct{}
+
+func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) <span class="cov0" title="0">{
+        return 2, nil
+}</span>
+
+func (m *SnippetModel) Get(id int) (models.Snippet, error) <span class="cov8" title="1">{
+        switch id </span>{
+        case 1:<span class="cov8" title="1">
+                return mockSnippet, nil</span>
+        default:<span class="cov8" title="1">
+                return models.Snippet{}, models.ErrNoRecord</span>
+        }
+}
+
+func (m *SnippetModel) Latest() ([]models.Snippet, error) <span class="cov0" title="0">{
+        return []models.Snippet{mockSnippet}, nil
+}</span>
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package mocks
+
+import (
+        "github.com/noloman/snippetbox/internal/models"
+)
+
+type UserModel struct{}
+
+func (m *UserModel) Insert(name, email, password string) error <span class="cov8" title="1">{
+        switch email </span>{
+        case "dupe@example.com":<span class="cov0" title="0">
+                return models.ErrDuplicateEmail</span>
+        default:<span class="cov8" title="1">
+                return nil</span>
+        }
+}
+
+func (m *UserModel) Authenticate(email, password string) (int, error) <span class="cov0" title="0">{
+        if email == "alice@example.com" &amp;&amp; password == "pa$$word" </span><span class="cov0" title="0">{
+                return 1, nil
+        }</span>
+
+        <span class="cov0" title="0">return 0, models.ErrInvalidCredentials</span>
+}
+
+func (m *UserModel) Exists(id int) (bool, error) <span class="cov0" title="0">{
+        switch id </span>{
+        case 1:<span class="cov0" title="0">
+                return true, nil</span>
+        default:<span class="cov0" title="0">
+                return false, nil</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package models
+
+import (
+        "database/sql"
+        "errors"
+        "time"
+)
+
+type SnippetModelInterface interface {
+        Insert(title string, content string, expires int) (int, error)
+        Get(id int) (Snippet, error)
+        Latest() ([]Snippet, error)
+}
+
+// Define a Snippet type to hold the data for an individual snippet. Notice how
+// the fields of the struct correspond to the fields in our MySQL snippets table?
+type Snippet struct {
+        ID      int
+        Title   string
+        Content string
+        Created time.Time
+        Expires time.Time
+}
+
+// Define a SnippetModel type which wraps a sql.DB connection pool
+type SnippetModel struct {
+        DB *sql.DB
+}
+
+// This will insert a new snippet into the database
+func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) <span class="cov0" title="0">{
+        // Write the SQL statement we want to execute. I've split it over two lines
+        // for readability (which is why it's surrounded with backquotes instead
+        // of normal double quotes).
+        stmt := `INSERT INTO snippets (title, content, created, expires) VALUES (?, ?, UTC_TIMESTAMP(), DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? DAY))`
+
+        // Use the Exec() method on the embedded connection pool to execute the
+        // statement. The first parameter is the SQL statement, followed by the
+        // values for the placeholder parameters: title, content and expiry in
+        // that order. This method returns a sql.Result type, which contains some
+        // basic information about what happened when the statement was executed.
+        result, err := m.DB.Exec(stmt, title, content, expires)
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, nil
+        }</span>
+
+        // Use the LastInsertId() method on the result to get the ID of our
+        // newly inserted record in the snippets table.
+        <span class="cov0" title="0">id, err := result.LastInsertId()
+        if err != nil </span><span class="cov0" title="0">{
+                return 0, err
+        }</span>
+
+        // The ID returned has the type int64, so we convert it to an int type
+        // before returning.
+        <span class="cov0" title="0">return int(id), nil</span>
+}
+
+// This will return a specific snippet based on its id.
+func (m *SnippetModel) Get(id int) (Snippet, error) <span class="cov0" title="0">{
+        // Initialize a new zeroed Snippet struct
+        var s Snippet
+
+        // Use row.Scan() to copy the values from each field in sql.Row to the
+        // corresponding field in the Snippet struct. Notice that the arguments
+        // to row.Scan are *pointers* to the place you want to copy the data into,
+        // and the number of arguments must be exactly the same as the number of
+        // columns returned by your statement.
+        err := m.DB.QueryRow(`SELECT id, title, content, created, expires FROM snippets WHERE expires &gt; UTC_TIMESTAMP() AND id = ?`, id).Scan(&amp;s.ID, &amp;s.Title, &amp;s.Content, &amp;s.Created, &amp;s.Expires)
+
+        if err != nil </span><span class="cov0" title="0">{
+                // If the query returns no rows, then row.Scan() will return a
+                // sql.ErrNoRows error. We use the errors.Is() function check for that
+                // error specifically, and return our own ErrNoRecord error
+                // instead (we'll create this in a moment).
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov0" title="0">{
+                        return Snippet{}, ErrNoRecord
+                }</span> else<span class="cov0" title="0"> {
+                        return Snippet{}, err
+                }</span>
+        }
+        // If everything went OK, then return the filled Snippet struct
+        <span class="cov0" title="0">return s, nil</span>
+}
+
+// This will return the 10 most recently created snippets
+func (m *SnippetModel) Latest() ([]Snippet, error) <span class="cov0" title="0">{
+        // Write the SQL statement we want to execute
+        stmt := `SELECT id, title, content, created, expires FROM snippets WHERE expires &gt; UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+
+        // Use the Query() method on the connection pool to execute our
+        // SQL statement. This returns a sql.Rows resultset containing the result of
+        // our query.
+        rows, err := m.DB.Query(stmt)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        // We defer rows.Close() to ensure the sql.Rows resultset is
+        // always properly closed before the Latest() method returns. This defer
+        // statement should come *after* you check for an error from the Query()
+        // method. Otherwise, if Query() returns an error, you'll get a panic
+        // trying to close a nil resultset.
+        <span class="cov0" title="0">defer rows.Close()
+
+        var snippets []Snippet
+
+        // Use rows.Next to iterate through the rows in the resultset. This
+        // prepares the first (and then each subsequent) row to be acted on by the
+        // rows.Scan() method. If iteration over all the rows completes then the
+        // resultset automatically closes itself and frees-up the underlying
+        // database connection.
+
+        for rows.Next() </span><span class="cov0" title="0">{
+                // Create a pointer to a new zeroed Snippet struct
+                var s Snippet
+
+                // Use rows.Scan() to copy the values from each field in the row to the
+                // new Snippet object that we created. Again, the arguments to row.Scan()
+                // must be pointers to the place you want to copy the data into, and the
+                // number of arguments must be exactly the same as the number of
+                // columns returned by your statement.
+                err = rows.Scan(&amp;s.ID, &amp;s.Title, &amp;s.Content, &amp;s.Created, &amp;s.Expires)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                // Append it to the slice of snippets.
+                <span class="cov0" title="0">snippets = append(snippets, s)</span>
+        }
+        // When the rows.Next() loop has finished we call rows.Err() to retrieve any
+        // error that was encountered during the iteration. It's important to
+        // call this - don't assume that a successful iteration was completed
+        // over the whole resultset.
+        <span class="cov0" title="0">if err = rows.Err(); err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        // If everything went OK then return the Snippets slice.
+        <span class="cov0" title="0">return snippets, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package models
+
+import (
+        "database/sql"
+        "errors"
+        "strings"
+        "time"
+
+        "github.com/go-sql-driver/mysql"
+        "golang.org/x/crypto/bcrypt"
+)
+
+type UserModelInterface interface {
+        Insert(name, email, password string) error
+        Authenticate(email, password string) (int, error)
+        Exists(id int) (bool, error)
+}
+
+type User struct {
+        ID             int
+        Name           string
+        Email          string
+        HashedPassword []byte
+        Created        time.Time
+}
+
+// Define a new UserModel struct which wraps a database connection pool.
+type UserModel struct {
+        DB *sql.DB
+}
+
+// We'll use the Insert method to add a new record to the "users" table.
+func (m *UserModel) Insert(name, email, password string) error <span class="cov0" title="0">{
+        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 20)
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">stmt := `INSERT INTO users (name, email, hashed_password, created) VALUES (?, ?, ?, UTC_TIMESTAMP())`
+        _, err = m.DB.Exec(stmt, name, email, string(hashedPassword))
+        if err != nil </span><span class="cov0" title="0">{
+                // If this returns an error, we use the errors.As() function to check
+                // whether the error has the type *mysql.MySQLError. If it does, the
+                // error will be assigned to the mySQLError variable. We can then check
+                // whether or not the error relates to our users_uc_email key by
+                // checking if the error code equals 1062 and the contents of the error
+                // message string. If it does, we return an ErrDuplicateEmail error.
+                var mySQLError *mysql.MySQLError
+                if errors.As(err, &amp;mySQLError) </span><span class="cov0" title="0">{
+                        if mySQLError.Number == 1062 &amp;&amp; strings.Contains(mySQLError.Message, "users_uc_email") </span><span class="cov0" title="0">{
+                                return ErrDuplicateEmail
+                        }</span>
+                }
+                <span class="cov0" title="0">return err</span>
+        }
+        <span class="cov0" title="0">return nil</span>
+}
+
+// We'll use the Authenticate method to verify whether a user exists with
+// the provided email address and password. This will return the relevant
+// user ID if they do.
+func (m *UserModel) Authenticate(email, password string) (int, error) <span class="cov0" title="0">{
+        var (
+                id             int
+                hashedPassword []byte
+        )
+
+        stmt := "SELECT id, hashed_password FROM users WHERE email = ?"
+        err := m.DB.QueryRow(stmt, email).Scan(&amp;id, &amp;hashedPassword)
+        if err != nil </span><span class="cov0" title="0">{
+                if errors.Is(err, sql.ErrNoRows) </span><span class="cov0" title="0">{
+                        return 0, ErrInvalidCredentials
+                }</span>
+                <span class="cov0" title="0">return 0, err</span>
+        }
+
+        <span class="cov0" title="0">return id, nil</span>
+}
+
+// We'll use the Exists method to check if a user exists with a specific ID.
+func (m *UserModel) Exists(id int) (bool, error) <span class="cov8" title="1">{
+        switch id </span>{
+        case 1:<span class="cov8" title="1">
+                return true, nil</span>
+        default:<span class="cov8" title="1">
+                return false, nil</span>
+        }
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package validator
+
+import (
+        "regexp"
+        "strings"
+        "unicode/utf8"
+)
+
+type Validator struct {
+        NonFieldErrors []string
+        FieldErrors    map[string]string
+}
+
+// AddNonFieldError creates an AddNonFieldError() helper for adding error messages to the new NonFieldErrors slice.
+func (v *Validator) AddNonFieldError(message string) <span class="cov0" title="0">{
+        v.NonFieldErrors = append(v.NonFieldErrors, message)
+}</span>
+
+// EmailRegex uses the regexp.MustCompile() function to parse a regular expression pattern
+// for sanity checking the format of an email address. This returns a pointer to
+// a 'compiled' regexp.Regexp type, or panics in the event of an error. Parsing
+// this pattern once at startup and storing the compiled *regexp.Regexp in a
+// variable is more performant than re-parsing the pattern each time we need it.
+var EmailRegex = regexp.MustCompile("^[a-zA-Z0-9.!#$%&amp;'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+
+func MinChars(value string, n int) bool <span class="cov8" title="1">{
+        return utf8.RuneCountInString(value) &gt;= n
+}</span>
+
+// Matches returns true if a value matches a provided compiled regular
+// expression pattern.
+func Matches(value string, rx *regexp.Regexp) bool <span class="cov8" title="1">{
+        return rx.MatchString(value)
+}</span>
+
+func (v *Validator) Valid() bool <span class="cov8" title="1">{
+        return len(v.FieldErrors) == 0 &amp;&amp; len(v.NonFieldErrors) == 0
+}</span>
+
+func (v *Validator) AddError(key, message string) <span class="cov0" title="0">{
+        if v.FieldErrors == nil </span><span class="cov0" title="0">{
+                v.FieldErrors = make(map[string]string)
+        }</span>
+        <span class="cov0" title="0">if _, exists := v.FieldErrors[key]; exists </span><span class="cov0" title="0">{
+                v.FieldErrors[key] = message
+        }</span>
+}
+
+func (v *Validator) CheckField(ok bool, key, message string) <span class="cov8" title="1">{
+        if !ok </span><span class="cov0" title="0">{
+                v.AddError(key, message)
+        }</span>
+}
+
+func NotBlank(value string) bool <span class="cov8" title="1">{
+        return strings.TrimSpace(value) != ""
+}</span>
+
+func MaxChar(value string, max int) bool <span class="cov0" title="0">{
+        return utf8.RuneCountInString(value) &lt;= max
+}</span>
+
+func PermittedValues[T comparable](value T, permittedValues ...T) bool <span class="cov0" title="0">{
+        for _, v := range permittedValues </span><span class="cov0" title="0">{
+                if value == v </span><span class="cov0" title="0">{
+                        return true
+                }</span>
+        }
+        <span class="cov0" title="0">return false</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
