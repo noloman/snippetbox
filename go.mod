@@ -1,6 +1,7 @@
 module github.com/noloman/snippetbox
 
-go 1.22.1
+go 1.23.0
+
 toolchain go1.24.1
 
 require (
@@ -9,7 +10,7 @@ require (
 	github.com/justinas/alice v1.2.0
 )
 
-require github.com/justinas/nosurf v1.1.1
+require github.com/justinas/nosurf v1.2.0
 
 require (
 	github.com/alexedwards/scs/mysqlstore v0.0.0-20240316134038-7e11d57e8885
